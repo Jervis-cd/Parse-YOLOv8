@@ -1,6 +1,6 @@
 from ultralytics import YOLO
 
-model=YOLO("/media/ps/work/Parse-YOLOv8/yolov8n.pt")
+model=YOLO("/media/ps/work/Parse-YOLOv8/yolov8n.pt",task="detect")
 
 model.export(format="onnx",    # (str) format to export to, choices at https://docs.ultralytics.com/modes/export/#export-formats
              keras=False,      # (bool) use Kera=s
