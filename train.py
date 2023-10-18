@@ -2,6 +2,7 @@ import time
 from ultralytics import YOLO
 
 def get_save_dirname():
+    """使用时间戳作为训练保存文件名称"""
     return time.strftime('%Y-%m-%d-%H-%M-%S')
 
 model=YOLO("/media/ps/work/Parse-YOLOv8/yolov8n.pt",task="detect")
