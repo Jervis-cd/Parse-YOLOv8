@@ -2,8 +2,8 @@ from ultralytics import YOLO
 
 model=YOLO("/media/ps/work/Parse-YOLOv8/yolov8n.pt",task="detect")
 
-model.predict(source="",            # (str, optional) source directory for images or videos
-              show=False,           # (bool) show results if possible
+model.predict(source="ultralytics/assets",     # (str, optional) source directory for images or videos
+              show=True,           # (bool) show results if possible
               save_txt=False,       # (bool) save results as .txt file
               save_conf=False,      # (bool) save results with confidence scores
               save_crop=False,      # (bool) save cropped images with results
