@@ -19,7 +19,7 @@ model.train(model="yolov8n.pt",     # (str, optional) path to model file, i.e. y
             device=0,               # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
             workers=8,              # (int) number of worker threads for data loading (per RANK if DDP)
             project="",             # (str, optional) project name
-            name=get_save_dirname(),                # (str, optional) experiment name, results saved to 'project/name' directory
+            name=get_save_dirname(),# (str, optional) experiment name, results saved to 'project/name' directory
             exist_ok=False,         # (bool) whether to overwrite existing experiment
             pretrained=True,        # (bool | str) whether to use a pretrained model (bool) or a model to load weights from (str)
             optimizer="auto",       # (str) optimizer to use, choices=[SGD, Adam, Adamax, AdamW, NAdam, RAdam, RMSProp, auto]
