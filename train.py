@@ -3,8 +3,8 @@ from ultralytics import YOLO
 
 model=YOLO("/media/ps/work/Parse-YOLOv8/yolov8n.pt",task="detect")
 
-model.train(model="",               # (str, optional) path to model file, i.e. yolov8n.pt, yolov8n.yaml
-            data="",                # (str, optional) path to data file, i.e. coco128.yaml
+model.train(model="yolov8n.pt",     # (str, optional) path to model file, i.e. yolov8n.pt, yolov8n.yaml
+            data="ultralytics/cfg/datasets/coco128.yaml",  # (str, optional) path to data file, i.e. coco128.yaml
             epochs=100,             # (int) number of epochs to train for
             patience=50,            # (int) epochs to wait for no observable improvement for early stopping of training
             batch=16,               # (int) number of images per batch (-1 for AutoBatch)
