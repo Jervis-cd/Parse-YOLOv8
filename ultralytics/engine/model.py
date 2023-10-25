@@ -132,7 +132,7 @@ class Model(nn.Module):
         Args:
             cfg (str): model configuration file         #// 模型配置文件
             task (str | None): model task               #// 执行任务名称
-            model (BaseModel): Customized model.        #todo
+            model (BaseModel): Customized model.        #// 任务相对应的模型
             verbose (bool): display model info on load  #// 是否显示模型信息
         """
         cfg_dict = yaml_model_load(cfg)
@@ -162,6 +162,7 @@ class Model(nn.Module):
         suffix = Path(weights).suffix                               #// 获取模型的后缀
         #// 如果模型后缀为.pt
         if suffix == '.pt':
+            #// ckpk：保存文件中的模型以及训练配置信息，此处ckpt是包含model信息的
             self.model, self.ckpt = attempt_load_one_weight(weights)                   #// 返回模型以及权重文件名称
             self.task = self.model.args['task']                                        #// 获取模型的task
             self.overrides = self.model.args = self._reset_ckpt_args(self.model.args)
@@ -203,18 +204,19 @@ class Model(nn.Module):
         return self
 
     #// 函数没有调用过
-    def load(self, weights='yolov8n.pt'):
-        """Transfers parameters with matching names and shapes from 'weights' to model.
-        #// 将具有匹配名称和形状的参数,从给定权重赋值给model
-        """
-        self._check_is_pytorch_model()
-        if isinstance(weights, (str, Path)):
-            weights, self.ckpt = attempt_load_one_weight(weights)
-        self.model.load(weights)
-        return self
+    # def load(self, weights='yolov8n.pt'):
+    #     """Transfers parameters with matching names and shapes from 'weights' to model.
+    #     #// 将具有匹配名称和形状的参数,从给定权重赋值给model
+    #     """
+    #     self._check_is_pytorch_model()
+    #     if isinstance(weights, (str, Path)):
+    #         weights, self.ckpt = attempt_load_one_weight(weights)
+    #     self.model.load(weights)
+    #     return self
 
     def info(self, detailed=False, verbose=True):
         """
+        #// 记录模型的详细信息
         Logs model info.
 
         Args:
@@ -265,13 +267,15 @@ class Model(nn.Module):
         #// 如果没有给定predictor，根据task智能加载predictor
         if not self.predictor:
             self.predictor = (predictor or self._smart_load('predictor'))(overrides=args, _callbacks=self.callbacks)
-            #todo
+            #// setup_model设置模型参数
             self.predictor.setup_model(model=self.model, verbose=is_cli)
         else:  # only update args if predictor is already setup
             #// 如果predictor已经给定，则指更新其参数
             self.predictor.args = get_cfg(self.predictor.args, args)
+            #// 获取文件保存地址
             if 'project' in args or 'name' in args:
                 self.predictor.save_dir = get_save_dir(self.predictor.args)
+        #// SAM model时使用
         if prompts and hasattr(self.predictor, 'set_prompts'):  # for SAM-type models
             self.predictor.set_prompts(prompts)
         #todo 返回预测结果
@@ -308,9 +312,11 @@ class Model(nn.Module):
             validator (BaseValidator): Customized validator.
             **kwargs : Any other args accepted by the validators. To see all args check 'configuration' section in docs
         """
+        #// 默认验证过程，使用矩形推理
         custom = {'rect': True}  # method defaults
         args = {**self.overrides, **custom, **kwargs, 'mode': 'val'}  # highest priority args on the right
 
+        #// 加载验证器验证器
         validator = (validator or self._smart_load('validator'))(args=args, _callbacks=self.callbacks)
         validator(model=self.model)
         self.metrics = validator.metrics

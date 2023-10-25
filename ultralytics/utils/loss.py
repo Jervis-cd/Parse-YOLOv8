@@ -114,13 +114,14 @@ class KeypointLoss(nn.Module):
 
 class v8DetectionLoss:
     """Criterion class for computing training losses."""
-
+    #// 传入模型，模型必须是数据并行的模型
     def __init__(self, model):  # model must be de-paralleled
         """Initializes v8DetectionLoss with the model, defining model-related properties and BCE loss function."""
         device = next(model.parameters()).device  # get model device
         h = model.args  # hyperparameters
 
         m = model.model[-1]  # Detect() module
+        #// 用于计算分类损失以及box损失
         self.bce = nn.BCEWithLogitsLoss(reduction='none')
         self.hyp = h
         self.stride = m.stride  # model strides
@@ -129,26 +130,36 @@ class v8DetectionLoss:
         self.reg_max = m.reg_max
         self.device = device
 
+        #// 如果reg_max参数大于1，表示要使用dfocal loss
         self.use_dfl = m.reg_max > 1
 
+        #// 正负样本分配器
         self.assigner = TaskAlignedAssigner(topk=10, num_classes=self.nc, alpha=0.5, beta=6.0)
+        #todo box损失
         self.bbox_loss = BboxLoss(m.reg_max - 1, use_dfl=self.use_dfl).to(device)
+        #// 0,1,2,3,4,.......,15
         self.proj = torch.arange(m.reg_max, dtype=torch.float, device=device)
 
     def preprocess(self, targets, batch_size, scale_tensor):
+        #// 预处理targets shape:[本批次标签总数,6:标签索引,class,box]
+        #// batch_size,scale_tensor为原始图像大小
         """Preprocesses the target counts and matches with the input batch size to output a tensor."""
+        #// 如果当前批次没有targets
         if targets.shape[0] == 0:
             out = torch.zeros(batch_size, 0, 5, device=self.device)
         else:
+            #// 获取标签对应的图像索引
             i = targets[:, 0]  # image index
-            _, counts = i.unique(return_counts=True)
+            _, counts = i.unique(return_counts=True)            #// 统计各个图像中的标签个数
             counts = counts.to(dtype=torch.int32)
+            #// 设置当前批次输出格式，counts.max()是将同批次输入对齐
             out = torch.zeros(batch_size, counts.max(), 5, device=self.device)
             for j in range(batch_size):
                 matches = i == j
-                n = matches.sum()
+                n = matches.sum()               #// 等于每张图像的标签个数
                 if n:
-                    out[j, :n] = targets[matches, 1:]
+                    out[j, :n] = targets[matches, 1:]               #// 
+            #// 变化bbox格式xywh->xyxy，并将标签坐标转化为网络输入图像的大小上的坐标值
             out[..., 1:5] = xywh2xyxy(out[..., 1:5].mul_(scale_tensor))
         return out
 

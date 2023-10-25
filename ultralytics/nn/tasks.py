@@ -558,6 +558,7 @@ def torch_safe_load(weight):
     from ultralytics.utils.downloads import attempt_download_asset
 
     check_suffix(file=weight, suffix='.pt')             #// 检查模型后缀
+    #// 返回下载后的路径
     file = attempt_download_asset(weight)  # search online if missing locally  #// 如果本地没有指定权重文件，则下载
     try:
         with temporary_modules({
