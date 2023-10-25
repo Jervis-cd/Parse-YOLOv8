@@ -94,6 +94,7 @@ class Model(nn.Module):
         #// 如果没有后缀并且model的名字在预先配置中，则为model添加pt后缀，并配置suffix
         if not suffix and Path(model).stem in GITHUB_ASSETS_STEMS:
             model, suffix = Path(model).with_suffix('.pt'), '.pt'  # add suffix, i.e. yolov8n -> yolov8n.pt
+
         #// 如果suffix为yaml或yml调用_new()函数构建model
         if suffix in ('.yaml', '.yml'):
             self._new(model, task)
@@ -136,7 +137,7 @@ class Model(nn.Module):
         """
         cfg_dict = yaml_model_load(cfg)
         self.cfg = cfg
-        self.task = task or guess_model_task(cfg_dict)  #// 如果指定task直接使用，否则通过model推断task
+        self.task = task or guess_model_task(cfg_dict)  #// 如果指定task直接使用，否则通过model配置文件中head推断task
         #// 给定model直接使用，否则通过task智能加载模型
         self.model = (model or self._smart_load('model'))(cfg_dict, verbose=verbose and RANK == -1)  # build model
 

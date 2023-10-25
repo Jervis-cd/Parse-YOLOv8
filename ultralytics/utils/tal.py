@@ -75,15 +75,21 @@ class TaskAlignedAssigner(nn.Module):
     def __init__(self, topk=13, num_classes=80, alpha=1.0, beta=6.0, eps=1e-9):
         """Initialize a TaskAlignedAssigner object with customizable hyperparameters."""
         super().__init__()
-        self.topk = topk
-        self.num_classes = num_classes
-        self.bg_idx = num_classes
-        self.alpha = alpha
-        self.beta = beta
-        self.eps = eps
+        self.topk = topk                            #// 每个目标得分靠前的k个作为正样本
+        self.num_classes = num_classes              #// 类别总数
+        self.bg_idx = num_classes                   #// 背景id，class--->0-num_calsses-1
+        self.alpha = alpha                          #// 任务对齐，分类任务参数
+        self.beta = beta                            #// 任务对齐，回归任务参数
+        self.eps = eps                              
 
     @torch.no_grad()
     def forward(self, pd_scores, pd_bboxes, anc_points, gt_labels, gt_bboxes, mask_gt):
+        #// pd_scores:特征图每个位置预测类别one-hot编码
+        #// pd_bboxes:特征图每个位置位置回归
+        #// anc_points:anchor_points
+        #// gt_labels:类别标签，类别编号0,1,2,3...
+        #// gt_bboxes:回归bbox标签,网络输入大小对应的图像标签（非归一化之后的值）
+        #// mask_gt:
         """
         Compute the task-aligned assignment.
         Reference https://github.com/Nioolek/PPYOLOE_pytorch/blob/master/ppyoloe/assigner/tal_assigner.py
