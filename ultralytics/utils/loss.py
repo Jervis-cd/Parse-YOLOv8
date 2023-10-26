@@ -181,13 +181,17 @@ class v8DetectionLoss:
         """Calculate the sum of the loss for box, cls and dfl multiplied by batch size."""
         #// 初始化loss
         loss = torch.zeros(3, device=self.device)  # box, cls, dfl
-        #// 获取三个侦测头分别输出的特征
+        #// 获取三个侦测头分别输出的特征([bs,nc+4*reg_max,80,80],[bs,nc+4*reg_max,40,40],[bs,nc+4*reg_max,20,20])
         feats = preds[1] if isinstance(preds, tuple) else preds
-        #// 
+        #// ([bs,nc+4*reg_max,80,80],[bs,nc+4*reg_max,40,40],[bs,nc+4*reg_max,20,20])-->
+        #// torch.cat-->[bs,4*reg_max+nc,8400]-->
+        #// split-->[bs,4*reg_max,8400],[bs,nc,8400]
         pred_distri, pred_scores = torch.cat([xi.view(feats[0].shape[0], self.no, -1) for xi in feats], 2).split(
             (self.reg_max * 4, self.nc), 1)
 
+        #// [bs,8400,nc]
         pred_scores = pred_scores.permute(0, 2, 1).contiguous()
+        #// [bs,8400,4*reg_max]
         pred_distri = pred_distri.permute(0, 2, 1).contiguous()
 
         dtype = pred_scores.dtype
