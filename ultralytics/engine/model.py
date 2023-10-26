@@ -166,7 +166,7 @@ class Model(nn.Module):
             self.model, self.ckpt = attempt_load_one_weight(weights)                   #// 返回模型以及权重文件名称
             self.task = self.model.args['task']                                        #// 获取模型的task
             self.overrides = self.model.args = self._reset_ckpt_args(self.model.args)
-            self.ckpt_path = self.model.pt_path
+            self.ckpt_path = self.model.pt_path                                         #// 设置模型权重路径
         else:
             #todo
             weights = checks.check_file(weights)

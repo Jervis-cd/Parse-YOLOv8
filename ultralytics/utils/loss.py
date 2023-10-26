@@ -70,12 +70,15 @@ class BboxLoss(nn.Module):
     def forward(self, pred_dist, pred_bboxes, anchor_points, target_bboxes, target_scores, target_scores_sum, fg_mask):
         """IoU loss."""
         weight = target_scores.sum(-1)[fg_mask].unsqueeze(-1)
+        #// 计算CIOU
         iou = bbox_iou(pred_bboxes[fg_mask], target_bboxes[fg_mask], xywh=False, CIoU=True)
+        #// 计算IOU loss
         loss_iou = ((1.0 - iou) * weight).sum() / target_scores_sum
 
         # DFL loss
         if self.use_dfl:
-            target_ltrb = bbox2dist(anchor_points, target_bboxes, self.reg_max)
+            target_ltrb = bbox2dist(anchor_points, target_bboxes, self.reg_max)     #// 将bbox转为，中心点到四条边的距离
+            #// 计算DFL loss
             loss_dfl = self._df_loss(pred_dist[fg_mask].view(-1, self.reg_max + 1), target_ltrb[fg_mask]) * weight
             loss_dfl = loss_dfl.sum() / target_scores_sum
         else:
@@ -91,6 +94,7 @@ class BboxLoss(nn.Module):
         tr = tl + 1  # target right
         wl = tr - target  # weight left
         wr = 1 - wl  # weight right
+        #// reduction='node'表示直接返回各个样本的loss
         return (F.cross_entropy(pred_dist, tl.view(-1), reduction='none').view(tl.shape) * wl +
                 F.cross_entropy(pred_dist, tr.view(-1), reduction='none').view(tl.shape) * wr).mean(-1, keepdim=True)
 
@@ -158,15 +162,16 @@ class v8DetectionLoss:
                 matches = i == j
                 n = matches.sum()               #// 等于每张图像的标签个数
                 if n:
-                    out[j, :n] = targets[matches, 1:]               #// 
+                    out[j, :n] = targets[matches, 1:]
             #// 变化bbox格式xywh->xyxy，并将标签坐标转化为网络输入图像的大小上的坐标值
             out[..., 1:5] = xywh2xyxy(out[..., 1:5].mul_(scale_tensor))
         return out
 
     def bbox_decode(self, anchor_points, pred_dist):
+        #// 从锚点和分布解码预测的对象边界框坐标，边界框[bs,anchor,4*reg_max]-->[bs,anchor,4]
         """Decode predicted object bounding box coordinates from anchor points and distribution."""
         if self.use_dfl:
-            b, a, c = pred_dist.shape  # batch, anchors, channels
+            b, a, c = pred_dist.shape  # batch, anchors, channels  [bs,8400,4*reg_max]
             pred_dist = pred_dist.view(b, a, 4, c // 4).softmax(3).matmul(self.proj.type(pred_dist.dtype))
             # pred_dist = pred_dist.view(b, a, c // 4, 4).transpose(2,3).softmax(3).matmul(self.proj.type(pred_dist.dtype))
             # pred_dist = (pred_dist.view(b, a, c // 4, 4).softmax(2) * self.proj.type(pred_dist.dtype).view(1, 1, -1, 1)).sum(2)
@@ -174,8 +179,11 @@ class v8DetectionLoss:
 
     def __call__(self, preds, batch):
         """Calculate the sum of the loss for box, cls and dfl multiplied by batch size."""
+        #// 初始化loss
         loss = torch.zeros(3, device=self.device)  # box, cls, dfl
+        #// 获取三个侦测头分别输出的特征
         feats = preds[1] if isinstance(preds, tuple) else preds
+        #// 
         pred_distri, pred_scores = torch.cat([xi.view(feats[0].shape[0], self.no, -1) for xi in feats], 2).split(
             (self.reg_max * 4, self.nc), 1)
 

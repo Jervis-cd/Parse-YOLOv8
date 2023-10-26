@@ -16,7 +16,7 @@ model.train(model="yolov8n.pt",     # (str, optional) path to model file, i.e. y
             save=True,              # (bool) save train checkpoints and predict results
             save_period=-1,         # (int) Save checkpoint every x epochs (disabled if < 1)
             cache=False,            # (bool) True/ram, disk or False. Use cache for data loading
-            device=0,               # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
+            device=3,               # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
             workers=8,              # (int) number of worker threads for data loading (per RANK if DDP)
             project="",             # (str, optional) project name
             name=get_save_dirname(),# (str, optional) experiment name, results saved to 'project/name' directory
