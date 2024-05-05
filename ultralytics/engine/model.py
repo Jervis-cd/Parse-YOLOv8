@@ -344,11 +344,11 @@ class Model(nn.Module):
             device=args['device'],
             verbose=kwargs.get('verbose'))
 
-    #// 导出模型
+    # 导出模型
     def export(self, **kwargs):
         """
         Export model.
-        #// 导出模型
+        # 导出模型
         Args:
             **kwargs : Any other args accepted by the Exporter. To see all args check 'configuration' section in docs.
         """
@@ -359,7 +359,7 @@ class Model(nn.Module):
         args = {**self.overrides, **custom, **kwargs, 'mode': 'export'}  # highest priority args on the right
         return Exporter(overrides=args, _callbacks=self.callbacks)(model=self.model)
 
-    #// 执行模型训练过程
+    # 执行模型训练过程
     def train(self, trainer=None, **kwargs):
         """
         Trains the model on a given dataset.
