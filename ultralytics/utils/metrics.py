@@ -187,17 +187,17 @@ class ConfusionMatrix:
     A class for calculating and updating a confusion matrix for object detection and classification tasks.
 
     Attributes:
-        task (str): The type of task, either 'detect' or 'classify'.
-        matrix (np.array): The confusion matrix, with dimensions depending on the task.
-        nc (int): The number of classes.
-        conf (float): The confidence threshold for detections.
-        iou_thres (float): The Intersection over Union threshold.
+        task (str): The type of task, either 'detect' or 'classify'.            # 任务类型
+        matrix (np.array): The confusion matrix, with dimensions depending on the task.         # 混淆矩阵
+        nc (int): The number of classes.            # 类别总数
+        conf (float): The confidence threshold for detections.          # 置信度阈值
+        iou_thres (float): The Intersection over Union threshold.       # nms iou阈值
     """
 
     def __init__(self, nc, conf=0.25, iou_thres=0.45, task='detect'):
         """Initialize attributes for the YOLO model."""
         self.task = task
-        self.matrix = np.zeros((nc + 1, nc + 1)) if self.task == 'detect' else np.zeros((nc, nc))
+        self.matrix = np.zeros((nc + 1, nc + 1)) if self.task == 'detect' else np.zeros((nc, nc))          # 初始化混淆矩阵，detect任务默认存在background类别
         self.nc = nc  # number of classes
         self.conf = 0.25 if conf in (None, 0.001) else conf  # apply 0.25 if default val conf is passed
         self.iou_thres = iou_thres
@@ -230,12 +230,12 @@ class ConfusionMatrix:
                 self.matrix[self.nc, gc] += 1  # background FN
             return
 
-        detections = detections[detections[:, 4] > self.conf]
-        gt_classes = labels[:, 0].int()
-        detection_classes = detections[:, 5].int()
-        iou = box_iou(labels[:, 1:], detections[:, :4])
+        detections = detections[detections[:, 4] > self.conf]          # 筛选出大于自信度阈值的框
+        gt_classes = labels[:, 0].int()                     # 获取标签label
+        detection_classes = detections[:, 5].int()          # 获取预测label
+        iou = box_iou(labels[:, 1:], detections[:, :4])     # 计算所有可能的IOU取值
 
-        x = torch.where(iou > self.iou_thres)
+        x = torch.where(iou > self.iou_thres)               # 计算IOU大于nms IOU阈值的坐标
         if x[0].shape[0]:
             matches = torch.cat((torch.stack(x, 1), iou[x[0], x[1]][:, None]), 1).cpu().numpy()
             if x[0].shape[0] > 1:
